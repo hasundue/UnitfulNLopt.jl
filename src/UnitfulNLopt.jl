@@ -22,6 +22,13 @@ function NLopt.min_objective!(uopt::UnitfulOpt, f)
     NLopt.min_objective!(uopt.opt, g)
 end
 
+for f in (:equality_constraint!, :inequality_constraint!)
+    @eval function NLopt.$f(uopt::UnitfulOpt, f, tol::Real)
+        g(x,y) = ustrip(f(x*uopt.xunit, y*uopt.funit*uopt.xunit^-1))
+        NLopt.$f(uopt.opt, g, tol)
+    end
+end
+
 for f in (:optimize, :optimize!)
     @eval function NLopt.$f(uopt::UnitfulOpt, x::AbstractVector)
         fmin, xmin, res = NLopt.$f(uopt.opt, ustrip(x))
